@@ -1,0 +1,33 @@
+.form-error {
+    background-color: #b71609;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 12px;
+    list-style: none;
+    margin: 5px 0 0;
+    padding: 3px 5px;
+    position: relative;
+    z-index: 1000;
+}
+
+.form-error:before {
+    border: 5px solid transparent;
+    border-bottom: 5px solid #b71609;
+    border-top: 0;
+    content: "";
+    display: block;
+    left: 50%;
+    position: absolute;
+    top: 0;
+    transform: translate(-50%,-100%);
+    width: 0;
+}
+
+select.input-error, input.input-error {
+    border-color: #b71609;
+}
+
+.required:not(.form-check-label):after {
+    content: " *";
+    color: red;
+}

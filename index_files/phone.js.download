@@ -1,0 +1,133 @@
+$(document).ready(function () {
+    function init() {
+        $('.flag-select[data-initialized=false]').each(function () {
+            const flagSelect = $(this);
+            const dropdown = $(this).find('.flag-select-dropdown');
+            const selector = $(this).find('.flag-select-selector');
+            const inputValue = $(this).find('input[type=hidden]');
+            const inputPhone = $(this).find('input[type=tel]');
+            const flags = {};
+            let selectedCountryCode = null;
+
+            $(this).attr('data-initialized', true);
+
+            /**
+             * Load country code and flags
+             */
+            dropdown.find('li').each(function () {
+                const countryCode = $(this).attr('data-country-code');
+                flags[countryCode] = $(this).attr('data-phone-code');
+            });
+
+            parseValue(inputValue.val());
+
+            /**
+             * Parse the initial value and set defaults
+             */
+            function parseValue(phone) {
+                let found = false;
+
+                for (const countryCode in flags) {
+                    const phoneCode = flags[countryCode];
+
+                    if (phone.startsWith('+' + phoneCode)) {
+                        selectFlag(countryCode);
+                        inputPhone.val(phone.substring(phoneCode.length + 1));
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    const userCountry = flagSelect.attr('data-country');
+                    if (userCountry) {
+                        selectFlag(userCountry);
+                    }
+                }
+
+                checkFloating();
+            }
+
+            /**
+             * Select the current country
+             */
+            function selectFlag(countryCode) {
+                const phoneCode = flags[countryCode];
+                selectedCountryCode = countryCode;
+
+                selector.find('.flag-country').attr('class', 'flag-country flag-' + countryCode.toLowerCase());
+                selector.find('.flag-select-selector-number').text('+' + phoneCode);
+
+                updateInput();
+            }
+
+            /**
+             * Update the HTML input with the result value
+             */
+            function updateInput() {
+                const phoneCode = selectedCountryCode ? flags[selectedCountryCode] : null;
+                let phoneNumber = inputPhone.val();
+                phoneNumber = phoneNumber.replace(/[^0-9]/g, '');
+                phoneNumber = phoneNumber.replace(/^0+/, '');
+
+                inputValue.val((phoneCode ? '+' + phoneCode : '') + phoneNumber);
+            }
+
+            inputPhone.on('change', function () {
+                updateInput();
+            });
+
+            inputPhone.on('focus blur', function () {
+                checkFloating();
+            });
+
+            function checkFloating() {
+                if (inputPhone.is(':placeholder-shown') && !inputPhone.is(':focus')) {
+                    flagSelect.removeClass('floating');
+                } else {
+                    flagSelect.addClass('floating');
+                }
+            }
+
+            /**
+             * Show/hide dropdown
+             */
+            selector.on('click', function (e) {
+                e.stopPropagation();
+
+                if (dropdown.is(':visible')) {
+                    dropdown.hide();
+                } else {
+                    dropdown.show();
+                }
+            });
+
+            /**
+             * Select a country
+             */
+            $(this).find('.flag-select-dropdown li').on('click', function () {
+                selectFlag($(this).attr('data-country-code'));
+                dropdown.hide();
+            });
+
+            /**
+             * Hide dropdown on click outside
+             */
+            $('body').on('click', function (event) {
+                if (dropdown.is(':visible') && !$(event.target).is(dropdown)) {
+                    dropdown.hide();
+                }
+            });
+
+            updateInput();
+        });
+    }
+
+    init();
+
+    let observer = new MutationObserver((mutationsList) => {
+        init();
+    });
+
+    observer.observe(document.body, {childList: true, subtree: true});
+});
